@@ -70,6 +70,7 @@ namespace TailBlazer.Views.Tail
         public ICommand UnClearCommand { get; }
         public ICommand KeyAutoTail { get; }
         public string Name { get; }
+        public string DisplayName { get; set; }
 
 
 

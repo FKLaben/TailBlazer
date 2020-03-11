@@ -133,6 +133,7 @@
     <Compile Include="FileHandling\TextAssociations\TextAssociation.cs" />
     <Compile Include="FileHandling\TextAssociations\TextAssociationCollection.cs" />
     <Compile Include="FileHandling\TextAssociations\TextAssociationToStateConverter.cs" />
+    <Compile Include="FileHandling\FileInfoExtension.cs" />
     <Compile Include="Formatting\DisplayText.cs" />
     <Compile Include="Formatting\GeneralOptions.cs" />
     <Compile Include="Formatting\GeneralOptionsConverter.cs" />

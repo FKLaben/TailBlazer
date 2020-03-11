@@ -11,9 +11,14 @@ namespace TailBlazer.Infrastucture
         public string FullName => _info.FullName;
 
         public FileHeader(FileInfo info)
+            : this(info, info.Name)
+        {
+        }
+
+        public FileHeader(FileInfo info, string displayName)
         {
             _info = info;
-            _displayName = info.Name;
+            _displayName = displayName;
         }
 
         public string DisplayName

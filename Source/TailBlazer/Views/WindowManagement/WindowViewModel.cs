@@ -22,6 +22,7 @@ using TailBlazer.Views.FileDrop;
 using TailBlazer.Views.Options;
 using TailBlazer.Views.Recent;
 using TailBlazer.Views.Tail;
+using System.IO.Compression;
 
 namespace TailBlazer.Views.WindowManagement
 {
@@ -155,40 +156,71 @@ namespace TailBlazer.Views.WindowManagement
             if (files == null) return;
 
             foreach (var file in files)
-                OpenFile(new FileInfo(file));
-        }
+                    OpenFile(new FileInfo(file));
+                }
 
         private void OpenFile(FileInfo file)
         {
             _schedulerProvider.Background.Schedule(() =>
             {
+                _logger.Info($"Attempting to open '{file.FullName}'");
+                ICollection<FileInfoExtension> filesToOpenFromUnzippedArchive = new LinkedList<FileInfoExtension>();
                 try
                 {
-                    _logger.Info($"Attempting to open '{file.FullName}'");
-
-                    RecentFiles.Add(file);
-
-                    //1. resolve TailViewModel
-                    var factory = _objectProvider.Get<TailViewModelFactory>();
-                    var newItem = factory.Create(file);
-
-                    //2. Display it
-                    _windowsController.Register(newItem);
-
-                    _logger.Info($"Objects for '{file.FullName}' has been created.");
-                    //do the work on the ui thread
-                    _schedulerProvider.MainThread.Schedule(() =>
+                    using (ZipArchive archive = ZipFile.OpenRead(file.FullName))
                     {
-                       Views.Add(newItem);
-                        _logger.Info($"Opened '{file.FullName}'");
-                        Selected = newItem;
-                    });
+                        foreach (ZipArchiveEntry entry in archive.Entries)
+                        {
+                            var tempFileName = Path.GetTempFileName();
+                            entry.ExtractToFile(tempFileName, true);
+                            filesToOpenFromUnzippedArchive.Add(new FileInfoExtension(new FileInfo(tempFileName), entry.FullName));
+                        }
+                    }
+
+                    foreach (var tempFileInfo in filesToOpenFromUnzippedArchive)
+                    {
+                        OpenSingleFileInfo(tempFileInfo.FileInfo, tempFileInfo.DisplayName, false);
+                    }
                 }
                 catch (Exception ex)
                 {
                     //TODO: Create a failed to load view
-                    _logger.Error(ex, $"There was a problem opening '{file.FullName}'");
+                    _logger.Error(ex, $"There was a problem opening '{file.FullName}': Probably not a zip archive file or not able to create/read temp file");
                 }
+
+                if (!filesToOpenFromUnzippedArchive.Any())
+                {
+                    try
+                    {
+                        OpenSingleFileInfo(file, file.FullName, true);
+                    }
+                    catch (Exception ex)
+                    {
+                        //TODO: Create a failed to load view
+                        _logger.Error(ex, $"There was a problem opening '{file.FullName}'");
+                    }
+                }
+            });
+        }
+
+        private void OpenSingleFileInfo(FileInfo file, string displayName, bool autoTail)
+        {
+            RecentFiles.Add(file);
+
+            //1. resolve TailViewModel
+            var factory = _objectProvider.Get<TailViewModelFactory>();
+            var newItem = factory.Create(file, displayName, autoTail);
+
+            //2. Display it
+            _windowsController.Register(newItem);
+
+            _logger.Info($"Objects for '{file.FullName}' has been created.");
+            //do the work on the ui thread
+            _schedulerProvider.MainThread.Schedule(() =>
+            {
+                Views.Add(newItem);
+                _logger.Info($"Opened '{file.FullName}'");
+                Selected = newItem;
             });
         }
 

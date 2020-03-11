@@ -26,21 +26,21 @@ namespace TailBlazer.Views.Tail
             var converted = converter.Convert(state.State);
 
             var file = converted.FileName;
-            var viewModel = CreateView(new FileInfo(file));
+            var viewModel = CreateView(new FileInfo(file), converted.DisplayName, converted.AutoTail);
 
             var restorer = (IPersistentView)viewModel;
             restorer.Restore(state);
-            return new HeaderedView(new FileHeader(new FileInfo(file)), viewModel);
+            return new HeaderedView(new FileHeader(new FileInfo(file), viewModel.DisplayName), viewModel);
         }
 
-        public HeaderedView Create(FileInfo fileInfo)
+        public HeaderedView Create(FileInfo fileInfo, string displayName, bool autoTail)
         {
-            var viewModel = CreateView(fileInfo);
+            var viewModel = CreateView(fileInfo, displayName, autoTail);
             viewModel.ApplySettings();//apply default values
-            return new HeaderedView(new FileHeader(fileInfo), viewModel);
+            return new HeaderedView(new FileHeader(fileInfo, displayName), viewModel);
         }
 
-        private TailViewModel CreateView(FileInfo fileInfo)
+        private TailViewModel CreateView(FileInfo fileInfo, string displayName, bool autoTail)
         {
             if (fileInfo == null) throw new ArgumentNullException(nameof(fileInfo));
 
@@ -58,7 +58,10 @@ namespace TailBlazer.Views.Tail
                // new Argument<ICombinedSearchMetadataCollection>(combined)
             };
 
-            return _objectProvider.Get<TailViewModel>(args);
+            var tailViewModel = _objectProvider.Get<TailViewModel>(args);
+            tailViewModel.AutoTail = autoTail;
+            tailViewModel.DisplayName = displayName;
+            return tailViewModel;
         }
         
         public string Key => TailViewModelConstants.ViewKey;

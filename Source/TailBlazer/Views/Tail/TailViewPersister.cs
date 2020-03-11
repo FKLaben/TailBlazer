@@ -17,7 +17,7 @@ namespace TailBlazer.Views.Tail
         ViewState IPersistentView.CaptureState()
         {
             var coverter = new TailViewToStateConverter();
-            var state = coverter.Convert(_tailView.Name, _tailView.SearchCollection.Selected.Text, _tailView.SearchMetadataCollection.Metadata.Items.ToArray());
+            var state = coverter.Convert(_tailView.Name, _tailView.DisplayName, _tailView.AutoTail, _tailView.SearchCollection.Selected.Text, _tailView.SearchMetadataCollection.Metadata.Items.ToArray());
             return new ViewState(TailViewModelConstants.ViewKey, state);
         }
 

@@ -26,7 +26,10 @@ namespace TailBlazer.Views.WindowManagement
                         Item = page,
                         Label = renamer.GetName(page.FullName)
                     })
-                    .ForEach(x => x.Item.DisplayName = x.Label);
+                    .ForEach(
+                        x =>
+                        x.Item.DisplayName = string.IsNullOrEmpty(x.Item.DisplayName) ? x.Label : x.Item.DisplayName
+                    );
                 });
         }
 

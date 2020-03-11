@@ -67,7 +67,7 @@ namespace TailBlazer.Views.Tail
             var writer = selectedChanged.CombineLatest(metaChanged,(selected, metadata)=>new { selected , metadata })
                         .Where(_=> !loadingSettings)
                         .Throttle(TimeSpan.FromMilliseconds(250))
-                        .Select(x => converter.Convert(tailView1.Name, x.selected, x.metadata))
+                        .Select(x => converter.Convert(tailView1.Name, tailView1.DisplayName, tailView1.AutoTail, x.selected, x.metadata))
                     .Subscribe(state =>
                     {
                         stateBucketService.Write(type, tailView.Name, state);
